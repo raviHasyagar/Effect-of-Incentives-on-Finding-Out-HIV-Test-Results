@@ -1,0 +1,345 @@
+---
+title: "Project Causal Inference"
+author: "Group 14 (Ariana, Jiraiyu, Ravi, Yashish)"
+date: "4/17/2022"
+output: pdf_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(MatchIt)
+```
+
+## 1 Executive Summary
+
+AIDS infection in Africa is on the rise. One of the strategies to
+prevent this is to make sure the people getting tested are getting their
+results. In this document we evaluate an experiment to explore if giving
+incentives to people gets them to find out the results. We have done so
+using Propensity Score Matching technique and OLS regression. The
+results indicate that giving incentive indeed pushes people to find
+their results. Also, the distance to the VCT center is another factor
+which impacts decision to find the test result.
+
+## 2 Background
+
+Over the past two decades, the HIV/AIDS epidemic has afflicted millions
+of individuals in Africa. In the absence of significantly expanded
+prevention and treatment programs, the epidemic is expected to worsen in
+many other parts of the world. One intervention often suggested to
+alleviate the spread of the disease is HIV testing, and some have gone
+so far as to say that voluntary counseling and testing (VCT) is the
+"missing weapon in the battle against AIDS". Under the assumption that
+HIV testing is an effective prevention strategy, many international
+organizations and governments have called for increased investments in
+counseling and testing, requiring large amounts of monetary and human
+resources. For example, in South Africa, government expenditures on
+counseling and testing increased from \$2.4 million in 2000 to \$17.3
+million in 2004, and in Mozambique, 55 percent of all HIV/AIDS program
+expenditures in 2000 were for HIV counseling and testing.
+
+Underlying the emphasis on HIV testing for prevention---and the
+large-scale expenditures on testing---are two rarely challenged
+assumptions. First, many believe that knowledge of HIV status has
+positive effects on sexual behavior that prevent the spread of the
+disease. In particular, it is assumed that those diagnosed HIV-negative
+will protect themselves from infection and those diagnosed HIV-positive
+will take precautions to protect others. Second, many believe that it is
+difficult to get people to learn their HIV status, due primarily to
+psychological or social barriers, thus justifying expenditures on
+destigmatization and advertising campaigns. In this project, we evaluate
+a field experiment in rural Malawi designed to address these assumptions
+where in respondents were offered free door-to-door HIV test and were
+randomly assigned vouchers (\$0-\$3) redeemable upon obtaining the
+results at a nearby VCT center.
+
+## 3 Data Overview
+
+1.  Overall data had 4820 observations and 9 features which are as
+    follows:
+
+    a.  Gender (male)
+
+    b.  Unique Village Id (villnum)
+
+    c.  Got/Not got results (got)
+
+    d.  Received/Not Received incentives (any)
+
+    e.  Total Incentives (tinc)
+
+    f.  Distance to VCT center in Kilometers (distvct)
+
+    g.  Married or Not (mar)
+
+    h.  Age (age)
+
+    i.  HIV Test Result (hiv2004)
+
+2.  Summary statistics (appendix 9.2):
+
+    Number of respondents: 4820
+
+    Number of Males: 2260
+
+    Age range (Males): 13 to 84
+
+    Number of Females: 2560
+
+    Age Range (Females): 11 to 81
+
+    Survey Response Rates: 67%
+
+    HIV Test Acceptance: 90.49%
+
+    Learned Result: 69.66%
+
+    HIV Prevalence: 6%
+
+    Incentives Received: 2016
+
+    No Incentives: 878 Average Age: 33
+
+## 4 The Experiment
+
+Free door-to-door tests were conducted to collect HIV samples. Men and
+women were randomly selected from approximately 140 villages located in
+the Northern, Central, and Southern regions of Malawi from,
+approximately, 25 percent of all households in each village. Between May
+and August of 2004, nurses from outside each area offered respondents
+free tests in their homes for HIV (samples were taken through oral
+swabs). Vouchers ranging from 0 to \$3 were drawn randomly from the bag
+with an average amount of \$1.01. For each subject, VCT center, to
+receive the results, were randomly selected.
+
+## 5 Analysis
+
+#### 5.1 Randomization Test
+
+Randomization in an experiment refers to a random assignment of
+participants to the treatment in an experiment. It makes sure that the
+groups made for conducting an experiment are as similar as possible to
+each other so that the results come out as accurate as possible.
+Randomization prevents biases and eliminates any possibility of an
+unobserved confound and possibility of simultaneity. To check if the
+subjects selected for the experiments (appendix 9.3) were completely
+random, we ran 't.test' for each of the features between control and
+treatment. From the results of the experiment we could say that, except
+with respect to age (p-value = 0.005421), in all the features the
+subjects chosen were completely random. But since the age was not
+randomized in the data, we decided to match subjects in control and
+treatment using propensity score matching.
+
+#### 5.2 Propensity Score Matching (PSM)
+
+Propensity score matching is a statistical matching technique that
+attempts to estimate the effect of a treatment by accounting for the
+co-variates that predict receiving the treatment. PSM attempts to reduce
+the bias due to confounding variables that could be found in an estimate
+of the treatment effect obtained from simply comparing outcomes among
+units that received the treatment versus those that did not. In PSM, we
+find matched pairs that are as similar on observed variables, so that
+the treatment can be assumed to be random. If no match is found, throw
+away the data. In PSM we model treatment as a function of observed
+variables using logit or probit. We then get predicted probabilities of
+treatment from the model and for each treated observation, find control
+observation with closest propensity score.
+
+To simulate randomization and balance the number of subjects in
+treatment and control, PSM matches each individual in control and
+treatment based on given features (age, distance to VCT center, gender
+and if married or not in this case) using a propensity score (appendix
+9.4). After propensity score matching we re-tested the randomization for
+each figure and there are no columns which fail randomization.
+
+#### 5.3 Power of the Experiment
+
+We needed to check whether our experiment was under-powered i.e. having
+a sample that is too small. If the sample lacks power, it means it
+cannot reliably detect effects and the chance of discovering effects
+that aren't there goes up. This could be because random noise in the
+data leads to more chance differences in small samples. To report a
+difference of 0.45 between control and treatment. with 95% level of
+significance and 80% power, we need at least 79 respondents in both
+treatment and control (appendix 9.5). In the matched data, we have 400+
+rows of data both the groups. Thus the experiment is sufficiently
+powerful.
+
+#### 5.4 OLS Regressions
+
+Initially regressed age, marital status, gender, distance to VCT center,
+and incentives over if the subject proceeded to get the result. Then,
+regressed incentives over if the subject proceeded to get the result.
+Next, regressed distance to VCT center over if the subject proceeded to
+get the result. Lastly, regressed the incentive the subject got over if
+the subject proceeded to get the result.
+
+We found that:
+
+1\. Any amount of incentive increases the odds of subjects finding out
+the results by almost 7 times.
+
+2\. Increasing incentive amount by \$1 increases the odds of subject
+finding out the results by about 1.01 times.
+
+3\. Decreasing the distance to VCT center by 1 km, increases the odds of
+subject finding out the results by about 1.2 times.
+
+Please refer to appendix 9.7 for all the results.
+
+## 6 Assumptions
+
+We have had below assumptions which have been tested in the Analysis
+section:
+
+1.  Randomization of the features in the experiment subjects
+2.  The experiments has enough power to provide the significant results.
+
+## 7 Threats and Limitations to the Experiment
+
+1.  Omitted variable bias : There could be other factors, such as
+    behavior of VCT center staff due to which a subject might be wary of
+    getting the results
+2.  Selection Bias : The design of this experiment avoids selection bias
+    because it randomized: Individual incentives to learn HIV status
+    Location of VCT centers where HIV results were available
+3.  Measurement error: There is no measurement error as experiment also
+    measured actual post-test attendance at centers to obtain results
+4.  Simultaneity: There can be no source of simultaneity
+
+## 8 Conclusions and Recommendations
+
+From the above experiments we have established causality between getting
+the getting incentives and if the subject proceeds to get the results.
+Since incentives increase the odds of a subject finding out their test
+results, long term programs should be developed to provide incentives to
+all patients who are getting test for HIV. And, since decreasing the
+distance to VCT increases the odds of subject finding out the results,
+infrastructure should be set up to increase the number of centers. This
+would make the centers more accessible for the subject to get the
+results. These two combined with each other could be an effective HIV
+prevention strategy in rural Malawi.
+
+## 9 Appendix
+
+#### 9.1 Load data
+
+```{r, echo=FALSE}
+all_data = read.csv("HIV_Data (1).csv")
+
+all_data = all_data %>% select(villnum, got, distvct, hiv2004, tinc, any, age, male, mar)
+
+final_data = na.omit(all_data)
+```
+
+Column 'any' tells us if the subject is treatment or control.
+
+#### 9.2 Summary statistics of the data
+
+```{r}
+### Count of all respondents
+summary_data = all_data %>% 
+    mutate(villnum = as.factor(villnum),
+           got = as.factor(got),
+           any = as.factor(any),
+           male = as.factor(male),
+           mar = as.factor(mar))
+summary(summary_data)
+
+```
+
+#### 9.3 Randomization check
+
+```{r}
+treatment_data = final_data %>%
+                 filter(any == 1)
+
+control_data = final_data %>%
+                 filter(any == 0)
+
+print(t.test(treatment_data$age, control_data$age))
+print(t.test(treatment_data$distvct, control_data$distvct))
+print(t.test(treatment_data$male, control_data$male))
+print(t.test(treatment_data$mar, control_data$mar))
+```
+
+#### 9.4 Propensity score matching
+
+```{r}
+match_output <- matchit(any ~ age + distvct + male + mar, 
+                        data = final_data, 
+                        method = 'nearest', 
+                        distance = "logit", 
+                        caliper = 0.001, 
+                        replace = FALSE, 
+                        ratio = 2)
+print(summary(match_output))
+data_match = match.data(match_output)
+
+```
+
+#### 9.5 Randomization re-check for matched data
+
+```{r}
+treatment_data = data_match %>%
+                 filter(any == 1)
+
+control_data = data_match %>%
+                 filter(any == 0)
+
+print(t.test(treatment_data$age, control_data$age))
+print(t.test(treatment_data$distvct, control_data$distvct))
+print(t.test(treatment_data$male, control_data$male))
+print(t.test(treatment_data$mar, control_data$mar))
+```
+
+#### 9.6 Power Test
+
+```{r}
+powerTestResults = power.t.test(type = 'two.sample', 
+                                power = .8, 
+                                sig = 0.05, 
+                                delta = .45, 
+                                sd = 1)
+powerTestResults
+```
+
+#### 9.7 OLS Regressions
+
+```{r}
+model = glm(got ~ distvct + any + age + male + mar,
+           data = data_match,
+           family = "binomial")
+summary(model)
+
+model = glm(got ~ any,
+           data = data_match,
+           family = "binomial")
+summary(model)
+
+model = glm(got ~ any + distvct,
+           data = data_match,
+           family = "binomial")
+summary(model)
+
+model = glm(got ~ tinc + distvct,
+           data = data_match,
+           family = "binomial")
+summary(model)
+
+model = glm(got ~ tinc + distvct,
+           data = data_match,
+           family = "binomial")
+summary(model)
+```
+
+## 10 References
+
+1.  Data:
+    <https://github.com/NickCH-K/causaldata/blob/main/Python/causaldata/thornton_hiv/data.py>
+2.  Actual experiment :
+    <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3115776/>
